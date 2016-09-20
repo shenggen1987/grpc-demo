@@ -42,6 +42,7 @@ function main() {
                                           grpc.credentials.createInsecure());
   
   console.log(11111);
+  // var mclient = traceMethodCalls(client);
   var user;
   if (process.argv.length >= 3) {
     user = process.argv[2];
@@ -51,12 +52,48 @@ function main() {
   var request = new messages.HelloRequest();
   request.setName(user);
 
-  client.sayHello(request, function(err, response) {
+  // client.sayHello(request, function(err, response) {
+  //   console.log('Greeting:', response.getMessage());
+  // });
+  // warpClient(client, client.sayHello)(request, function(err, response) {
+  //   console.log('Greeting:', response.getMessage());
+  // });
+  var dd = traceMethodCalls(client)
+  dd.sayHello(request, function(err, response) {
     console.log('Greeting:', response.getMessage());
   });
- 
+// let func = sayHello
+  // mclient.sayHello = function(){
+
+  //   //func.bind(this);
+  // }
+  // res.render()
+
 
 }
+function warpClient(client, method){
+  var _render = method;
+    return function (req, func) {
+        console.log(req);
+        _render.call(client,req,func);
+    }
+}
 
+function traceMethodCalls(obj) {
+      console.log(11111);
+        var handler = {
+            get(target, propKey, receiver) {
+                const origMethod = target[propKey];
+                return function (...args) {
+                    console.log(args);
+                    console.log(propKey + ' -> ' );
+                    var result = origMethod.apply(obj, args);
+                    console.log(result);
+                    return result;
+                };
+            }
+        };
+        return new Proxy(obj, handler);
+    }
 
 main();
