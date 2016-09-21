@@ -37,12 +37,14 @@ var services = require('./helloworld_grpc_pb');
 var grpc = require('grpc');
 
 var intercept = require('./intercept');
+var warp_client = require('./warp_client');
+var grpc_client = require('./grpc_client');
 function main() {
   var client = new services.GreeterClient('localhost:50051',
                                           grpc.credentials.createInsecure());
   
-  console.log(11111);
-  // var mclient = traceMethodCalls(client);
+  
+  
   var user;
   if (process.argv.length >= 3) {
     user = process.argv[2];
@@ -51,31 +53,41 @@ function main() {
   }
   var request = new messages.HelloRequest();
   request.setName(user);
-
   // client.sayHello(request, function(err, response) {
   //   console.log('Greeting:', response.getMessage());
   // });
   // warpClient(client, client.sayHello)(request, function(err, response) {
   //   console.log('Greeting:', response.getMessage());
   // });
-  var dd = traceMethodCalls(client)
-  dd.sayHello(request, function(err, response) {
-    console.log('Greeting:', response.getMessage());
-  });
-// let func = sayHello
-  // mclient.sayHello = function(){
 
-  //   //func.bind(this);
-  // }
-  // res.render()
+  var mclient = grpc_client(client);
+  mclient.sayHello(request, function(err, response) {
+    console.log(request);
+    if(err){
+      console.log(err);
+    }
+    console.log('Greeting:', response.getMessage());
+    
+
+    // var foo = {
+    //     err: err,
+    //     response: response
+    // }
+    // var bar = function(){
+    //     console.log(this.response.getMessage());
+    // }
+    // var boundFunc = bar.bind(foo);
+    // boundFunc(); 
+  });
 
 
 }
 function warpClient(client, method){
   var _render = method;
-    return function (req, func) {
-        console.log(req);
-        _render.call(client,req,func);
+    return function (request, func) {
+        request.setName('22323');
+        console.log(request);
+        _render.call(client,request,func);
     }
 }
 
